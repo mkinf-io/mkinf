@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 pyproject = toml.load("pyproject.toml")
 version = pyproject["project"]["version"]
-print("mkinf SDK version", version)
 
 def pull(repos: list[str], env: Optional[dict[str, str]] = None) -> list[BaseTool]:
     if not os.getenv('MKINF_API_KEY'):
