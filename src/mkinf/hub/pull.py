@@ -1,13 +1,17 @@
 import os
 import requests
+import json
+import toml
 from langchain_core.tools import BaseTool
 from pydantic import Field
+from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()
+pyproject = toml.load("pyproject.toml")
+version = pyproject["project"]["version"]
 
-
-def pull(repos: list[str]) -> list[BaseTool]:
+def pull(repos: list[str], env: Optional[dict[str, str]] = None) -> list[BaseTool]:
     if not os.getenv('MKINF_API_KEY'):
         raise ValueError("Missing MKINF_API_KEY")
 
@@ -29,28 +33,28 @@ def _run(self, {params}):
     import requests
     try:
         # Build the body dynamically from parameters
-        body = {{{", ".join(f'"{param}": {param}' for param in action["input_schema"].keys())}}}
+        args = {{{", ".join(f'"{param}": {param}' for param in action["input_schema"].keys())}}}
         response = requests.post(
-            url=f"https://run.dev.mkinf.io/v0.1/{repo["owner"]}/{repo["name"]}/{action["action"]}",
-            headers={{"Authorization": f"Bearer {os.getenv('MKINF_API_KEY')}"}},
-            json=body
+            url="https://run.dev.mkinf.io/v0.1/{repo["owner"]}/{repo["name"]}/{action["action"]}",
+            headers={{"Authorization": "Bearer {os.getenv('MKINF_API_KEY')}"}},
+            json={{ "args": args, "env": {json.dumps(env) if env else None}, "client_version": "{version}" }}
         )
         return response.json()
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"ERROR: {{e}}")
         return {{"error": str(e)}}
 """
             class_attributes = {}
             exec(method_body, {}, class_attributes)
             DynamicClass = type(
-                f"{repo["owner"]}__{repo["name"]}__{action["action"]}",
+                f"{repo['owner']}__{repo['name']}__{action['action']}",
                 (BaseTool,),
                 {
                     "__annotations__": {
                         "name": str,
                         "description": str,
                     },
-                    "name": Field(default=f"{repo["owner"]}__{repo["name"]}__{action["action"]}"),
+                    "name": Field(default=f"{repo['owner']}__{repo['name']}__{action['action']}"),
                     "description": Field(default=action["description"]),
                     "_run": class_attributes["_run"],
                 },
