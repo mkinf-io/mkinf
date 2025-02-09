@@ -66,7 +66,7 @@ class MkinfTool(BaseTool):
     repo_action: str
     repo_version: Optional[str] = None
     args_schema: Optional[type[BaseModel]] = None
-    env: Optional[dict[str, str]]
+    env: Optional[dict[str, Optional[str]]]
 
     @t.override
     def _run(self, **kwargs: t.Any) -> t.Any:
@@ -87,7 +87,7 @@ class MkinfTool(BaseTool):
         assert self.args_schema is not None  # noqa: S101
         return self.args_schema
 
-def pull(repos: list[str], env: Optional[dict[str, str]] = None) -> list[BaseTool]:
+def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None) -> list[BaseTool]:
     if not os.getenv('MKINF_API_KEY'):
         raise ValueError("Missing MKINF_API_KEY")
 

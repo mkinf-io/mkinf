@@ -1,12 +1,24 @@
+import os
 from typing import Annotated, TypedDict, Literal
-
 from langchain_openai import ChatOpenAI
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import AnyMessage, add_messages
 from langgraph.prebuilt import ToolNode
 from mkinf import hub as mh
 
-tools = mh.pull(["langchain/bing_search", "tatn/mcp-server-diff-python"])
+# tools = mh.pull(["cyclotruc/gitingest"])
+# tools = mh.pull(
+#   ["tavily-ai/tavily-mcp"],
+#   {"TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")})
+#
+tools = mh.pull(
+	["ScrapeGraphAI/scrapegraphai"],
+  {
+    "SCRAPEGRAPH_LLM_MODEL": "openai/gpt-4o-mini",
+    "SCRAPEGRAPH_LLM_API_KEY": os.getenv("OPENAI_API_KEY")
+  }
+)
+
 
 system_prompt = "Be a helpful assistant."
 
