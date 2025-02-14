@@ -67,6 +67,7 @@ class MkinfTool(BaseTool):
     repo_version: Optional[str] = None
     args_schema: Optional[type[BaseModel]] = None
     env: Optional[dict[str, Optional[str]]]
+    timeout: Optional[int] = 60
 
     @t.override
     def _run(self, **kwargs: t.Any) -> t.Any:
@@ -75,7 +76,7 @@ class MkinfTool(BaseTool):
         response = requests.post(
             url=f"https://run.dev.mkinf.io/v0.1/{self.repo_owner}/{self.repo_name}/{self.repo_action}",
             headers={"Authorization": f"Bearer {os.getenv('MKINF_API_KEY')}"},
-            json={ "args": kwargs, "env": self.env, "client_version": version }
+            json={ "args": kwargs, "env": self.env, "timeout": self.timeout, "client_version": version }
         )
         return response.json()
       except Exception as e:
@@ -87,7 +88,7 @@ class MkinfTool(BaseTool):
         assert self.args_schema is not None  # noqa: S101
         return self.args_schema
 
-def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None) -> list[BaseTool]:
+def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None, timeout: Optional[int] = 60) -> list[BaseTool]:
     if not os.getenv('MKINF_API_KEY'):
         raise ValueError("Missing MKINF_API_KEY")
 
@@ -111,7 +112,8 @@ def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None) -> li
               repo_name=repo["name"],
               repo_action=action["action"],
               args_schema=create_schema_model(action.get("input_schema", None)),
-              env=env
+              env=env,
+              timeout=timeout
             )
           )
 
