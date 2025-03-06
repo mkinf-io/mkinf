@@ -1,24 +1,69 @@
 import os
-from typing import Annotated, TypedDict, Literal
+from typing import Annotated, Literal, TypedDict
+
 from langchain_openai import ChatOpenAI
 from langgraph.graph import START, StateGraph
 from langgraph.graph.message import AnyMessage, add_messages
 from langgraph.prebuilt import ToolNode
+
 from mkinf import hub as mh
 
 # tools = mh.pull(["cyclotruc/gitingest"])
+
 # tools = mh.pull(
 #   ["tavily-ai/tavily-mcp"],
 #   {"TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")})
 #
+
+# tools = mh.pull(
+#   ["mkinf-io/browser-use-gologin"],
+#   env={
+#     "LLM_MODEL": os.getenv("LLM_MODEL"),
+#     "LLM_API_KEY": os.getenv("LLM_API_KEY"),
+#     "GOLOGIN_API_KEY": os.getenv("GOLOGIN_API_KEY")
+#   }
+# )
+
+# tools = mh.pull(
+#   ["browser-use/browser-use-mcp"],
+#   env={
+#     "LLM_MODEL": os.getenv("LLM_MODEL"),
+#     "LLM_API_KEY": os.getenv("LLM_API_KEY"),
+#     "HEADLESS": "TRUE"
+#   },
+#   timeout=360
+# )
+
 tools = mh.pull(
 	["ScrapeGraphAI/scrapegraphai"],
-  {
+  env={
     "SCRAPEGRAPH_LLM_MODEL": "openai/gpt-4o-mini",
     "SCRAPEGRAPH_LLM_API_KEY": os.getenv("OPENAI_API_KEY")
-  }
+  },
+  initialize=True,
+  timeout=360
 )
 
+# tools += mh.pull(
+#   ["cyclotruc/gitingest"],
+#   initialize=True,
+#   timeout=180,
+# )
+
+# tools += mh.pull(
+#   ["erithwik/mcp-hn"],
+#   initialize=True,
+#   timeout=180,
+# )
+
+tools += mh.pull(
+    ["langchain/bing_search"],
+    env={"BING_SUBSCRIPTION_KEY": os.getenv("BING_SUBSCRIPTION_KEY")},
+    initialize=True,
+    timeout=180,
+)
+
+# tools = mh.pull(["erithwik/mcp-hn"])
 
 system_prompt = "Be a helpful assistant."
 
@@ -31,6 +76,7 @@ class GraphsState(TypedDict):
 
 graph = StateGraph(GraphsState)
 tool_node = ToolNode(tools, handle_tool_errors=lambda e: str(e))
+
 
 # Function to decide whether to continue tool usage or end the process
 def should_continue(state: GraphsState) -> Literal["tools", "__end__"]:
@@ -52,7 +98,9 @@ def _call_model(state: GraphsState):
         # because of st primitively visually rendering the tool results
     ).bind_tools(tools, parallel_tool_calls=False)
     response = llm.invoke(messages)
-    return {"messages": [response]}  # add the response to the messages using LangGraph reducer paradigm
+    return {
+        "messages": [response]
+    }  # add the response to the messages using LangGraph reducer paradigm
 
 
 # Define the structure (nodes and directional edges between nodes) of the graph
@@ -74,7 +122,9 @@ graph_runnable = graph.compile()
 def invoke_our_graph(st_messages, callables):
     if not isinstance(callables, list):
         raise TypeError("callables must be a list")
-    return graph_runnable.invoke({"messages": st_messages}, config={"callbacks": callables})
+    return graph_runnable.invoke(
+        {"messages": st_messages}, config={"callbacks": callables}
+    )
 
 
 def get_tools_list():
