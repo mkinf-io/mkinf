@@ -68,14 +68,15 @@ class MkinfTool(BaseTool):
     args_schema: Optional[type[BaseModel]] = None
     env: Optional[dict[str, Optional[str]]]
     timeout: Optional[int] = 60
+    api_key: Optional[str] = None
 
     @t.override
     def _run(self, **kwargs: t.Any) -> t.Any:
       import requests
       try:
         response = requests.post(
-            url=f"https://run.dev.mkinf.io/v0.1/{self.repo_owner}/{self.repo_name}/{self.repo_action}",
-            headers={"Authorization": f"Bearer {os.getenv('MKINF_API_KEY')}"},
+            url=f"https://run.mkinf.io/v1/{self.repo_owner}/{self.repo_name}/{self.repo_action}",
+            headers={"Authorization": f"Bearer {self.api_key or os.getenv('MKINF_API_KEY')}"},
             json={ "args": kwargs, "env": self.env, "timeout": self.timeout, "client_version": version }
         )
         return response.json()
@@ -88,15 +89,20 @@ class MkinfTool(BaseTool):
         assert self.args_schema is not None  # noqa: S101
         return self.args_schema
 
-def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None, timeout: Optional[int] = 60) -> list[BaseTool]:
-    if not os.getenv('MKINF_API_KEY'):
-        raise ValueError("Missing MKINF_API_KEY")
+def pull(
+  repos: list[str],
+  env: Optional[dict[str, Optional[str]]] = None,
+  timeout: Optional[int] = 60,
+  api_key: Optional[str] = None
+) -> list[BaseTool]:
+    if not api_key and not os.getenv('MKINF_API_KEY'):
+        raise ValueError("Missing api_key or MKINF_API_KEY environment variable")
 
     tools = []
     res = requests.get(
         url="https://api.mkinf.io/v0.2/releases",
         params={"ids": repos},
-        headers={"Authorization": f"Bearer {os.getenv('MKINF_API_KEY')}"}
+        headers={"Authorization": f"Bearer {api_key or os.getenv('MKINF_API_KEY')}"}
     )
     if res.status_code != 200:
         raise Exception("Can't load tools")
@@ -113,7 +119,8 @@ def pull(repos: list[str], env: Optional[dict[str, Optional[str]]] = None, timeo
               repo_action=action["action"],
               args_schema=create_schema_model(action.get("input_schema", None)),
               env=env,
-              timeout=timeout
+              timeout=timeout,
+              api_key=api_key or os.getenv("MKINF_API_KEY"),
             )
           )
 
