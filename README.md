@@ -1,8 +1,10 @@
-# mkinf python SDK
+# mkinf SDK
+![PyPI - Version](https://img.shields.io/pypi/v/mkinf)
 
-## Prerequisites
-- Python 3.9 or higher installed
-- Basic understanding of Python and LLM programming
+The mkinf SDK is a powerful toolkit that allows you to easily integrate MCP servers into your applications. With mkinf, you can access a growing ecosystem of specialized AI capabilities through a simple, unified interface.
+
+## Getting Started
+Follow these steps to start using mkinf in your projects:
 
 ## 1. Create a mkinf Account
 Sign up for a free account at [hub.mkinf.io/signup](https://hub.mkinf.io/signup).
@@ -58,3 +60,10 @@ tools = mh.pull(
 
 > [!WARNING]
 > Currently, mkinf tools are compatible with LangChain chains and graphs. Support for other frameworks like CrewAI, AutoGen, and SmolAgents is coming soon.
+
+# Example
+You can run the included Streamlit example to see mkinf in action:
+```bash
+uv run sync --dev
+uv run example
+```
