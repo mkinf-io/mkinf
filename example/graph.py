@@ -6,19 +6,7 @@ from langgraph.graph.message import AnyMessage, add_messages
 from langgraph.prebuilt import ToolNode
 from mkinf import hub as mh
 
-# tools = mh.pull(["cyclotruc/gitingest"])
-# tools = mh.pull(
-#   ["tavily-ai/tavily-mcp"],
-#   {"TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")})
-#
-tools = mh.pull(
-	["ScrapeGraphAI/scrapegraphai"],
-  {
-    "SCRAPEGRAPH_LLM_MODEL": "openai/gpt-4o-mini",
-    "SCRAPEGRAPH_LLM_API_KEY": os.getenv("OPENAI_API_KEY")
-  }
-)
-
+tools = mh.pull(["cyclotruc/gitingest"])
 
 system_prompt = "Be a helpful assistant."
 

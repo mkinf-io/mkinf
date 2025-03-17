@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-
 import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -11,7 +10,6 @@ from st_callable_util import get_streamlit_cb  # Utility function to get a Strea
 load_dotenv()
 
 st.title("mkinf hub chat")
-#st.markdown("#### Chat mkinf")
 
 # Initialize the expander state
 if "expander_open" not in st.session_state:
